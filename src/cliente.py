@@ -90,7 +90,7 @@ class Main:
         correo = input("ingrese el correo electronico: ")
         telefono = input("ingrese el telefono: ")
 
-        # crear objeto de la clase Cliente
+        # crear objeto de la clase cliente
         cliente = Cliente(identificacion, nombre, correo, telefono)
 
         #comprobar si los datos son correctos
@@ -98,7 +98,7 @@ class Main:
             print("\ncliente registrado correctamente")
             cliente.mostrar_datos()
         else:
-            print("\nno se pudo registrar el cliente. Revise los datos.")
+            print("\nno se pudo registrar el cliente. revise los datos.")
 
 if __name__ == "__main__":
     programa = Main()
