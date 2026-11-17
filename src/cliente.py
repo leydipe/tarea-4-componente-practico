@@ -23,7 +23,7 @@ class Cliente:
         if isinstance(self.__telefono, str):
             self.__telefono = self.__telefono.strip()
 
-        self.validar_datos()
+        self.valido = self.validar_datos()
 
     # validar datos
     def validar_datos(self):
@@ -31,28 +31,34 @@ class Cliente:
         # validar identificacion
         if not isinstance(self.__identificacion, str) or not self.__identificacion.strip():
             print("La identificacion es obligatoria")
+            correcto = False
 
         # validar nombre
         if not isinstance(self.__nombre, str) or not self.__nombre.strip():
             print("el nombre es obligatorio")
         elif not self.__nombre.replace(" ", "").isalpha():
             print("el nombre solo debe contener letras")
+            correcto = False
 
         # validar correo
         if not isinstance(self.__correo, str):
             print("el correo debe ser texto")
+            correcto = False
         else:
             correo = self.__correo.strip()
             if "@" not in correo or "." not in correo.split("@")[-1]:
                 print("el correo electronico no es valido")
+                correcto = False
 
         # validar telefono
         if not isinstance(self.__telefono, str):
             print("el telefono debe ser texto")
+            correcto = False
         else:
             telefono = self.__telefono.strip()
             if not telefono.isdigit() or len(telefono) != 10:
                 print("el telefono debe tener exactamente 10 numeros")
+                correcto = False
 
     # consultar informacion
     def obtener_identificacion(self):
@@ -74,3 +80,26 @@ class Cliente:
         print("nombre:", self.__nombre)
         print("correo:", self.__correo)
         print("telefono:", self.__telefono)
+class Main:
+
+    def iniciar(self):
+        print("\nREGISTRO DE CLIENTES")
+
+        identificacion = input("ingrese la identificacion: ")
+        nombre = input("ingrese el nombre: ")
+        correo = input("ingrese el correo electronico: ")
+        telefono = input("ingrese el telefono: ")
+
+        # crear objeto de la clase Cliente
+        cliente = Cliente(identificacion, nombre, correo, telefono)
+
+        #comprobar si los datos son correctos
+        if cliente.valido:
+            print("\ncliente registrado correctamente")
+            cliente.mostrar_datos()
+        else:
+            print("\nno se pudo registrar el cliente. Revise los datos.")
+
+if __name__ == "__main__":
+    programa = Main()
+    programa.iniciar()
