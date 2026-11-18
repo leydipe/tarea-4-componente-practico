@@ -7,7 +7,7 @@ from pathlib import Path
 
 # ruta donde se encuentran los archivos del proyecto
 
-RUTA_SRC = Path(__file__).resolve().parent / "tarea-4-componente-practico" / "src"
+RUTA_SRC = Path(__file__).resolve().parent / "src"
 
 if not RUTA_SRC.is_dir():
     raise FileNotFoundError(f"No se encontró la carpeta de módulos: {RUTA_SRC}")
@@ -15,8 +15,16 @@ if not RUTA_SRC.is_dir():
 sys.path.insert(0, str(RUTA_SRC))
 
 from cliente import Cliente
-from excepciones import ClienteInvalidoError, ErrorSoftwareFJ
+from excepciones import (
+    ClienteInvalidoError,
+    ErrorSoftwareFJ,
+    ProcesamientoReservaError,
+    ReservaInvalidaError,
+    ServicioNoDisponibleError,
+)
+
 from registro_logs import logger
+from reserva import Reserva
 from servicios import AlquilerEquipo, AsesoriaEspecializada, SalaReserva
 
 
@@ -151,6 +159,111 @@ def calcular_equipo_con_cantidad_invalida():
     return equipo.calcular_costo(0)
 
 
+
+def crear_cliente_para_reserva(identificacion, nombre, correo, telefono):
+
+    """valida los datos y crea el cliente para la reserva"""
+
+    validar_cliente(identificacion, nombre, correo, telefono)
+    cliente = Cliente(identificacion, nombre, correo, telefono)
+
+    # se marca el cliente como válido para poder usarlo en la reserva
+
+    cliente.valido = True
+    return cliente
+
+
+def simular_reserva_confirmada_y_cancelada():
+
+    """prueba cómo se confirma y cancela una reserva"""
+
+    cliente = crear_cliente_para_reserva(
+        "1001", "Ana Perez", "ana@ejemplo.com", "3001234567"
+    )
+    sala = SalaReserva(
+        "S101",
+        "Sala de reuniones",
+        "Sala para reuniones empresariales",
+        50000,
+        1,
+    )
+
+    reserva = Reserva("R101", cliente, sala, 2)
+    reserva.confirmar_reserva()
+    resumen = reserva.obtener_resumen()
+
+    reserva.cancelar_reserva()
+    return (
+        f"{resumen}\n"
+        f"Después de cancelar: estado={reserva.estado}, "
+        f"sala disponible={sala.disponible}"
+    )
+
+
+def simular_rechazo_por_servicio_no_disponible():
+
+
+    """comprueba que no se pueda reservar una sala que ya está ocupada"""
+
+
+    cliente_1 = crear_cliente_para_reserva(
+        "1002", "Luis Gomez", "luis@ejemplo.com", "3001234568"
+    )
+    cliente_2 = crear_cliente_para_reserva(
+        "1003", "Sara Ruiz", "sara@ejemplo.com", "3001234569"
+    )
+    sala = SalaReserva(
+        "S102",
+        "Sala de capacitación",
+        "Sala para capacitaciones",
+        40000,
+        1,
+    )
+
+    primera = Reserva("R102", cliente_1, sala, 1)
+    primera.confirmar_reserva()
+
+    segunda = Reserva("R103", cliente_2, sala, 1)
+    try:
+        segunda.confirmar_reserva()
+    except ProcesamientoReservaError as error:
+        if not isinstance(error.__cause__, ServicioNoDisponibleError):
+            raise
+        primera.cancelar_reserva()
+        return (
+            f"Rechazo esperado: {error}\n"
+            f"Segunda reserva: {segunda.estado}; "
+            f"sala disponible tras cancelar la primera: {sala.disponible}"
+        )
+
+    primera.cancelar_reserva()
+    raise AssertionError("La segunda reserva debía rechazarse")
+
+
+def simular_rechazo_por_duracion_invalida():
+
+    """comprueba que no se permita reservar por cero horas"""
+
+    cliente = crear_cliente_para_reserva(
+        "1004", "Carlos Ruiz", "carlos@ejemplo.com", "3001234570"
+    )
+    sala = SalaReserva(
+        "S103",
+        "Sala de juntas",
+        "Sala para reuniones",
+        60000,
+        1,
+    )
+
+    try:
+        Reserva("R104", cliente, sala, 0)
+    except ReservaInvalidaError as error:
+        return f"Rechazo esperado: {error}"
+
+    raise AssertionError("La reserva con duración cero debía rechazarse")
+
+
+
 def main():
 
     """ejecuta todas las pruebas del programa"""
@@ -205,6 +318,18 @@ def main():
         (
             "rechazar el cálculo de un equipo con cantidad cero",
             calcular_equipo_con_cantidad_invalida,
+        ),
+                (
+            "confirmar y cancelar una reserva",
+            simular_reserva_confirmada_y_cancelada,
+        ),
+        (
+            "rechazar una reserva por servicio no disponible",
+            simular_rechazo_por_servicio_no_disponible,
+        ),
+        (
+            "rechazar una reserva con duración cero",
+            simular_rechazo_por_duracion_invalida,
         ),
     ]
 
